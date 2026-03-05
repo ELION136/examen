@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rendimiento Estudiantil 2026 — Producción de Macetas</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #F5A623;
+    --gold-light: #FFD580;
+    --gold-dark: #C47E0A;
+    --green: #2ECC71;
+    --yellow: #F39C12;
+    --red: #E74C3C;
+    --bg: #0A0A0F;
+    --bg2: #111118;
+    --bg3: #1A1A25;
+    --card: #16161E;
+    --border: rgba(245,166,35,0.15);
+    --text: #E8E8F0;
+    --muted: #7878A0;
+    --white: #FFFFFF;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(245,166,35,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 90% 80%, rgba(245,166,35,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 40px 0 32px;
+    text-align: center;
+    position: relative;
+  }
+  .header-badge {
+    display: inline-block;
+    background: rgba(245,166,35,0.12);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    padding: 6px 16px;
+    border-radius: 2px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(40px, 7vw, 72px);
+    letter-spacing: 4px;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  header h1 span { color: var(--gold); }
+  header p {
+    color: var(--muted);
+    font-size: 14px;
+    letter-spacing: 1px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ALERTA INDIVIDUAL */
+  .alert-individual {
+    background: linear-gradient(135deg, rgba(245,166,35,0.08), rgba(245,166,35,0.03));
+    border: 1px solid rgba(245,166,35,0.4);
+    border-left: 4px solid var(--gold);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 32px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .alert-individual .icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+  .alert-individual strong { color: var(--gold); display: block; font-size: 14px; letter-spacing: 1px; margin-bottom: 4px; font-family: 'Space Mono', monospace; }
+  .alert-individual p { color: var(--text); font-size: 14px; line-height: 1.6; }
+
+  /* META MACETAS */
+  .meta-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin: 24px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+  @media(max-width:600px){ .meta-card { grid-template-columns: 1fr; } }
+  .meta-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .meta-desc { color: var(--muted); font-size: 13px; line-height: 1.7; }
+  .meta-progress-wrap { }
+  .meta-nums {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .meta-num { text-align: center; }
+  .meta-num .val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    line-height: 1;
+  }
+  .meta-num .lbl { font-size: 11px; color: var(--muted); letter-spacing: 1px; font-family: 'Space Mono', monospace; }
+  .meta-num.achieved .val { color: var(--gold); }
+  .meta-num.goal .val { color: #444; }
+  .meta-bar-bg {
+    height: 14px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+  }
+  .meta-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light));
+    border-radius: 99px;
+    width: 0%;
+    transition: width 1.8s cubic-bezier(.16,1,.3,1);
+    position: relative;
+  }
+  .meta-bar-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: white;
+    opacity: 0.6;
+    border-radius: 99px;
+  }
+  .meta-pct {
+    text-align: right;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    margin-top: 6px;
+  }
+  .ownership-msg {
+    background: linear-gradient(135deg, rgba(46,204,113,0.08), rgba(46,204,113,0.02));
+    border: 1px solid rgba(46,204,113,0.3);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 14px;
+    font-size: 13px;
+    color: #2ECC71;
+    line-height: 1.6;
+    display: flex;
+    gap: 10px;
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    margin: 40px 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* GROUPS */
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  @media(max-width:700px){ .groups-grid { grid-template-columns: 1fr; } }
+  .group-card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    transition: border-color 0.3s;
+  }
+  .group-card:hover { border-color: rgba(245,166,35,0.3); }
+  .group-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .group-card.elite .group-label { color: #F5A623; }
+  .group-card.middle .group-label { color: #3498DB; }
+  .group-card.support .group-label { color: #E74C3C; }
+  .group-icon { font-size: 28px; margin-bottom: 10px; }
+  .group-name-list { list-style: none; }
+  .group-name-list li {
+    font-size: 13px;
+    color: var(--text);
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .group-name-list li:last-child { border-bottom: none; }
+  .rank-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    width: 18px;
+    flex-shrink: 0;
+  }
+  .score-chip {
+    margin-left: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .group-card.elite .score-chip { background: rgba(245,166,35,0.15); color: var(--gold); }
+  .group-card.middle .score-chip { background: rgba(52,152,219,0.15); color: #3498DB; }
+  .group-card.support .score-chip { background: rgba(231,76,60,0.15); color: #E74C3C; }
+
+  /* STUDENT CARDS */
+  .students-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 60px; }
+
+  .student-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    transition: border-color 0.3s, transform 0.2s;
+    cursor: pointer;
+  }
+  .student-card:hover { border-color: rgba(245,166,35,0.3); transform: translateX(4px); }
+  .student-card.expanded { border-color: rgba(245,166,35,0.4); }
+
+  .student-top {
+    display: grid;
+    grid-template-columns: 40px 1fr auto auto;
+    align-items: center;
+    gap: 16px;
+  }
+  @media(max-width:500px){ .student-top { grid-template-columns: 32px 1fr auto; } }
+
+  .student-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1;
+  }
+  .student-rank.top3 { color: var(--gold); }
+
+  .student-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--white);
+  }
+  .student-group-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    margin-top: 3px;
+  }
+
+  .student-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    line-height: 1;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .expand-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .expand-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* PROGRESS BAR */
+  .progress-section { margin-top: 16px; }
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .progress-bar-bg {
+    height: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    width: 0%;
+    transition: width 1.4s cubic-bezier(.16,1,.3,1);
+  }
+  .fill-green { background: linear-gradient(90deg, #27AE60, #2ECC71); }
+  .fill-yellow { background: linear-gradient(90deg, #E67E22, #F39C12); }
+  .fill-red { background: linear-gradient(90deg, #C0392B, #E74C3C); }
+  .fill-gold { background: linear-gradient(90deg, var(--gold-dark), var(--gold)); }
+
+  /* CRITERIA BARS */
+  .criteria-grid {
+    display: none;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  @media(max-width:500px){ .criteria-grid { grid-template-columns: 1fr; } }
+  .student-card.expanded .criteria-grid { display: grid; }
+
+  .criteria-item { }
+  .criteria-name {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 5px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+  .criteria-bar-bg {
+    height: 6px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .criteria-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 1.6s cubic-bezier(.16,1,.3,1);
+    width: 0%;
+  }
+  .criteria-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text);
+    margin-top: 3px;
+    text-align: right;
+  }
+
+  /* RECOMENDACIONES / ADVERTENCIAS */
+  .rec-section {
+    display: none;
+    margin-top: 16px;
+    gap: 10px;
+    flex-direction: column;
+  }
+  .student-card.expanded .rec-section { display: flex; }
+  .rec-box {
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .rec-box .rec-icon { flex-shrink: 0; font-size: 16px; }
+  .rec-box.warning {
+    background: rgba(231,76,60,0.08);
+    border: 1px solid rgba(231,76,60,0.25);
+    color: #E74C3C;
+  }
+  .rec-box.tip {
+    background: rgba(46,204,113,0.07);
+    border: 1px solid rgba(46,204,113,0.2);
+    color: #2ECC71;
+  }
+  .rec-box.info {
+    background: rgba(245,166,35,0.07);
+    border: 1px solid rgba(245,166,35,0.2);
+    color: var(--gold);
+  }
+
+  .surveillance-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    display: none;
+  }
+  .student-card.expanded .surveillance-tag { display: flex; }
+  .surveillance-dot {
+    width: 6px; height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  /* CRITERIOS INFO */
+  .criterios-section {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 40px;
+  }
+  .criterio-item {
+    display: flex;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .criterio-item:last-child { border-bottom: none; }
+  .criterio-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: rgba(245,166,35,0.2);
+    line-height: 1;
+    min-width: 36px;
+  }
+  .criterio-text strong { display: block; font-size: 14px; color: var(--white); margin-bottom: 4px; }
+  .criterio-text p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 0;
+    text-align: center;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-top: 20px;
+  }
+
+  /* Scroll reveal */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s, transform 0.6s; }
+  .reveal.visible { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-badge">Gestión 2026 · Evaluación Práctica</div>
+    <h1>RENDIMIENTO<br><span>ESTUDIANTIL</span></h1>
+    <p>Producción de Macetas · Registro Individual Verificado · Bajo Evidencia</p>
+  </header>
+
+  <!-- ALERTA INDIVIDUAL -->
+  <div class="alert-individual reveal">
+    <div class="icon">⚠️</div>
+    <div>
+      <strong>CALIFICACIÓN 100% INDIVIDUAL</strong>
+      <p>Cada puntaje refleja el desempeño <strong>personal y exclusivo</strong> de cada estudiante. Las calificaciones no son colectivas: cada alumno es evaluado de manera independiente por sus propios méritos, actitud, participación y responsabilidad. Todo momento está <strong>observado bajo evidencia</strong>.</p>
+    </div>
+  </div>
+
+  <!-- META MACETAS -->
+  <div class="meta-card reveal">
+    <div>
+      <div class="meta-title">🏺 META DE PRODUCCIÓN</div>
+      <div class="meta-desc">
+        El objetivo del grupo era producir <strong>25 macetas</strong>. Se alcanzaron <strong style="color:var(--gold)">9 macetas</strong> — cada una de ellas es fruto de su trabajo y esfuerzo colectivo.<br><br>
+        <em style="color:var(--gold-light); font-size:12px;">"Ustedes son los dueños de las macetas. Es su trabajo y les pertenece netamente a ustedes como propio su producto."</em>
+      </div>
+      <div class="ownership-msg">
+        🌱 <span>Cada maceta producida es un logro real que les pertenece. Llévense el orgullo de haber creado algo concreto con sus propias manos.</span>
+      </div>
+    </div>
+    <div class="meta-progress-wrap">
+      <div class="meta-nums">
+        <div class="meta-num achieved">
+          <div class="val">9</div>
+          <div class="lbl">LOGRADAS</div>
+        </div>
+        <div class="meta-num goal">
+          <div class="val">25</div>
+          <div class="lbl">META</div>
+        </div>
+      </div>
+      <div class="meta-bar-bg">
+        <div class="meta-bar-fill" id="metaBar"></div>
+      </div>
+      <div class="meta-pct" id="metaPct">0%</div>
+    </div>
+  </div>
+
+  <!-- GROUPS -->
+  <div class="section-title">GRUPOS POR RENDIMIENTO</div>
+  <div class="groups-grid reveal" id="groupsGrid"></div>
+
+  <!-- CRITERIOS -->
+  <div class="section-title">CRITERIOS DE EVALUACIÓN</div>
+  <div class="criterios-section reveal">
+    <div class="criterio-item">
+      <div class="criterio-num">1</div>
+      <div class="criterio-text">
+        <strong>Interés y Actitud (actitud/interés)</strong>
+        <p>Demuestra motivación, participa activamente, muestra curiosidad por aprender el proceso y mantiene una actitud positiva durante toda la práctica.</p>
+      </div>
+    </div>
+    <div class="criterio-item">
+      <div class="criterio-num">2</div>
+      <div class="criterio-text">
+        <strong>Participación en el Proceso de Producción (participación)</strong>
+        <p>Colabora en las diferentes etapas: molienda, preparación de mezcla, pesado de materiales y moldeo de macetas.</p>
+      </div>
+    </div>
+    <div class="criterio-item">
+      <div class="criterio-num">3</div>
+      <div class="criterio-text">
+        <strong>Responsabilidad en el Trabajo (responsabilidad)</strong>
+        <p>Cumple correctamente la tarea asignada, respeta el procedimiento explicado y cuida los materiales de trabajo.</p>
+      </div>
+    </div>
+    <div class="criterio-item">
+      <div class="criterio-num">4</div>
+      <div class="criterio-text">
+        <strong>Asistencia y Puntualidad</strong>
+        <p>Presencia constante y llegada a tiempo a las sesiones de trabajo práctico.</p>
+      </div>
+    </div>
+    <div class="criterio-item">
+      <div class="criterio-num">5</div>
+      <div class="criterio-text">
+        <strong>Extra Sobreinterés</strong>
+        <p>Iniciativa adicional, apoyo espontáneo, aporte más allá de lo requerido durante la práctica.</p>
+      </div>
+    </div>
+    <div class="criterio-item">
+      <div class="criterio-num">7</div>
+      <div class="criterio-text">
+        <strong>Cumplimiento del Tiempo y Disciplina</strong>
+        <p>Respeta los tiempos de trabajo, mantiene atención durante las instrucciones y sigue las normas establecidas.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENTS -->
+  <div class="section-title">CALIFICACIONES INDIVIDUALES</div>
+  <div class="students-list" id="studentsList"></div>
+
+</div>
+
+<footer>
+  <div class="container">
+    GESTIÓN 2026 · REGISTRO BAJO EVIDENCIA · CALIFICACIÓN INDIVIDUAL · PRODUCCIÓN DE MACETAS
+  </div>
+</footer>
+
+<script>
+const students = [
+  { id:1, name:"Brian Claros Muñoz",            asistencia:10, interes:0,  puntualidad:10, actitud:20, participacion:10, responsabilidad:10, extra:0, tiempo:10, puntaje:80 },
+  { id:2, name:"Jairo Carlos Ramos Córdova",     asistencia:10, interes:10, puntualidad:10, actitud:20, participacion:10, responsabilidad:10, extra:0, tiempo:10, puntaje:80 },
+  { id:3, name:"Patricia Laura Aldana Robles",   asistencia:10, interes:8,  puntualidad:10, actitud:15, participacion:10, responsabilidad:10, extra:0, tiempo:5,  puntaje:70 },
+  { id:4, name:"Alex Aguila Rojas",              asistencia:10, interes:10, puntualidad:10, actitud:0,  participacion:10, responsabilidad:0,  extra:0, tiempo:0,  puntaje:70 },
+  { id:5, name:"Sergio Luis Luján",              asistencia:10, interes:10, puntualidad:10, actitud:20, participacion:10, responsabilidad:10, extra:0, tiempo:10, puntaje:80 },
+  { id:6, name:"María Aracely Quinteros Claros", asistencia:10, interes:0,  puntualidad:10, actitud:0,  participacion:10, responsabilidad:0,  extra:0, tiempo:0,  puntaje:55 },
+  { id:7, name:"Josue Luis Angel Gutierrez Choque", asistencia:10, interes:10, puntualidad:10, actitud:0, participacion:10, responsabilidad:0, extra:0, tiempo:0, puntaje:59 },
+  { id:8, name:"Paola Nagely Inocente Alvarez",  asistencia:10, interes:8,  puntualidad:10, actitud:15, participacion:10, responsabilidad:10, extra:0, tiempo:5,  puntaje:52 },
+  { id:9, name:"Cristian Arnez Rojas",           asistencia:10, interes:10, puntualidad:10, actitud:0,  participacion:10, responsabilidad:0,  extra:0, tiempo:0,  puntaje:60 },
+  { id:10,name:"Romer Samuel Cachi Mamani",      asistencia:10, interes:10, puntualidad:10, actitud:0,  participacion:10, responsabilidad:10, extra:0, tiempo:0,  puntaje:90 },
+  { id:11,name:"Joel Andres Choque Vega",        asistencia:10, interes:0,  puntualidad:10, actitud:15, participacion:10, responsabilidad:0,  extra:0, tiempo:10, puntaje:56 },
+  { id:12,name:"Daniel Rojas León",              asistencia:10, interes:10, puntualidad:5,  actitud:0,  participacion:10, responsabilidad:0,  extra:0, tiempo:0,  puntaje:55 },
+  { id:13,name:"Carla Ivonne Aguayo Ocaña",      asistencia:10, interes:0,  puntualidad:5,  actitud:5,  participacion:10, responsabilidad:0,  extra:0, tiempo:0,  puntaje:50 },
+];
+
+const MAX_SCORE = 100;
+
+function getColor(score) {
+  if (score >= 75) return { cls:'fill-green', hex:'#2ECC71', label:'DESTACADO' };
+  if (score >= 60) return { cls:'fill-yellow', hex:'#F39C12', label:'EN PROCESO' };
+  return { cls:'fill-red', hex:'#E74C3C', label:'NECESITA APOYO' };
+}
+
+function getGroupTag(rank, total) {
+  if (rank <= 3) return { text:'🥇 GRUPO ÉLITE', color:'#F5A623' };
+  if (rank <= 6) return { text:'🥈 GRUPO MEDIO', color:'#3498DB' };
+  return { text:'🆘 GRUPO EN AUXILIO', color:'#E74C3C' };
+}
+
+function getRecommendations(s) {
+  const recs = [];
+  const warns = [];
+
+  if (s.puntaje >= 80) {
+    recs.push("¡Excelente desempeño! Mantén este nivel de compromiso y esfuerzo.");
+    recs.push("Podrías apoyar a compañeros con menor puntaje como líder del grupo.");
+  } else if (s.puntaje >= 60) {
+    recs.push("Vas por buen camino. Enfócate en los criterios donde bajaste puntaje para mejorar.");
+  } else {
+    warns.push("Tu puntaje está por debajo del nivel esperado. Necesitas reforzar tu participación activa.");
+    warns.push("Presta mayor atención a las instrucciones y respeta los tiempos de trabajo.");
+  }
+
+  if (s.interes === 0) warns.push("No se registró interés durante la actividad. El interés y la motivación son esenciales para el aprendizaje.");
+  if (s.actitud === 0) warns.push("Sin actitud registrada. La actitud positiva impacta directamente en tu calificación individual.");
+  if (s.responsabilidad === 0) warns.push("No se registró responsabilidad en las tareas asignadas. Este criterio es clave para tu evaluación.");
+  if (s.tiempo === 0) recs.push("Trabaja en respetar mejor los tiempos establecidos y mantener atención durante las instrucciones.");
+  if (s.extra > 0) recs.push("¡Buen detalle tener puntos extra por sobreinterés! Sigue demostrando iniciativa.");
+
+  return { recs, warns };
+}
+
+// Sort by score descending
+const sorted = [...students].sort((a,b) => b.puntaje - a.puntaje);
+sorted.forEach((s,i) => { s.rank = i+1; });
+
+// META BAR
+setTimeout(() => {
+  const pct = Math.round((9/25)*100);
+  document.getElementById('metaBar').style.width = pct+'%';
+  document.getElementById('metaPct').textContent = pct+'% de la meta alcanzada';
+}, 400);
+
+// GROUPS
+const groupsGrid = document.getElementById('groupsGrid');
+const groups = [
+  { label:'🥇 GRUPO ÉLITE — TOP 3', cls:'elite', students: sorted.slice(0,3) },
+  { label:'🥈 GRUPO MEDIO — SIGUIENTES 3', cls:'middle', students: sorted.slice(3,6) },
+  { label:'🆘 GRUPO EN AUXILIO — NECESITAN APOYO', cls:'support', students: sorted.slice(6) },
+];
+groups.forEach(g => {
+  const card = document.createElement('div');
+  card.className = `group-card ${g.cls} reveal`;
+  card.innerHTML = `<div class="group-label">${g.label}</div>
+    <ul class="group-name-list">
+      ${g.students.map((s,i) => `<li>
+        <span class="rank-num">#${s.rank}</span>
+        <span>${s.name.split(' ').slice(0,2).join(' ')}</span>
+        <span class="score-chip">${s.puntaje}</span>
+      </li>`).join('')}
+    </ul>`;
+  groupsGrid.appendChild(card);
+});
+
+// STUDENT CARDS
+const list = document.getElementById('studentsList');
+sorted.forEach(s => {
+  const col = getColor(s.puntaje);
+  const gtag = getGroupTag(s.rank);
+  const { recs, warns } = getRecommendations(s);
+  const pct = Math.round((s.puntaje / MAX_SCORE) * 100);
+
+  const criteria = [
+    { name:'ASISTENCIA', val:s.asistencia, max:10 },
+    { name:'INTERÉS', val:s.interes, max:10 },
+    { name:'PUNTUALIDAD', val:s.puntualidad, max:10 },
+    { name:'ACTITUD', val:s.actitud, max:20 },
+    { name:'PARTICIPACIÓN', val:s.participacion, max:10 },
+    { name:'RESPONSABILIDAD', val:s.responsabilidad, max:10 },
+    { name:'EXTRA/SOBREINTERÉS', val:s.extra, max:5 },
+    { name:'TIEMPO/DISCIPLINA', val:s.tiempo, max:10 },
+  ];
+
+  const card = document.createElement('div');
+  card.className = 'student-card reveal';
+  card.innerHTML = `
+    <div class="student-top">
+      <div class="student-rank ${s.rank<=3?'top3':''}">${s.rank}</div>
+      <div>
+        <div class="student-name">${s.name}</div>
+        <div class="student-group-tag" style="color:${gtag.color}">${gtag.text}</div>
+      </div>
+      <div class="student-score" style="color:${col.hex}">${s.puntaje}</div>
+      <button class="expand-btn" onclick="toggleCard(this)">+</button>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-labels">
+        <span>PUNTAJE TOTAL</span>
+        <span style="color:${col.hex}">${col.label} · ${pct}%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill ${col.cls}" style="width:0%" data-width="${pct}%"></div>
+      </div>
+    </div>
+
+    <div class="criteria-grid">
+      ${criteria.map(c => {
+        const cpct = c.max > 0 ? Math.round((c.val/c.max)*100) : 0;
+        const cColor = cpct >= 80 ? '#2ECC71' : cpct >= 50 ? '#F39C12' : '#E74C3C';
+        return `<div class="criteria-item">
+          <div class="criteria-name">${c.name}</div>
+          <div class="criteria-bar-bg">
+            <div class="criteria-bar-fill" style="width:0%; background:${cColor}" data-width="${cpct}%"></div>
+          </div>
+          <div class="criteria-val">${c.val}/${c.max}</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="rec-section">
+      ${warns.map(w => `<div class="rec-box warning"><span class="rec-icon">⚠️</span><span>${w}</span></div>`).join('')}
+      ${recs.map(r => `<div class="rec-box tip"><span class="rec-icon">✅</span><span>${r}</span></div>`).join('')}
+      <div class="rec-box info"><span class="rec-icon">🏺</span><span>Recuerda: las 9 macetas producidas son <strong>tuyas</strong>. Son el resultado de tu esfuerzo y te pertenecen como producto propio.</span></div>
+    </div>
+
+    <div class="surveillance-tag">
+      <div class="surveillance-dot"></div>
+      EVALUACIÓN INDIVIDUAL BAJO EVIDENCIA · OBSERVADO EN TODO MOMENTO · CRITERIOS VERIFICADOS
+    </div>
+  `;
+  list.appendChild(card);
+});
+
+function toggleCard(btn) {
+  const card = btn.closest('.student-card');
+  card.classList.toggle('expanded');
+  btn.textContent = card.classList.contains('expanded') ? '−' : '+';
+  if (card.classList.contains('expanded')) {
+    card.querySelectorAll('.criteria-bar-fill, .progress-bar-fill').forEach(bar => {
+      setTimeout(() => { bar.style.width = bar.dataset.width; }, 50);
+    });
+  }
+}
+
+// Reveal on scroll
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      // animate progress bars on first reveal
+      e.target.querySelectorAll && e.target.querySelectorAll('.progress-bar-fill').forEach(bar => {
+        setTimeout(() => { bar.style.width = bar.dataset.width; }, 200);
+      });
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
