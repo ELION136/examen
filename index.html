@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -28,7 +27,7 @@ button,input,select{font:inherit}.icon{width:17px;height:17px;stroke:currentColo
 .file-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}.chip{background:#f1f7fd;border:1px solid #d9e8f6;border-radius:18px;padding:5px 9px;font-size:11px;color:#52708a}
 .filters{display:grid;grid-template-columns:repeat(6,minmax(125px,1fr));gap:11px;align-items:end}.field label{display:block;font-size:11px;color:#6a7d91;margin-bottom:5px;font-weight:650}.field input,.field select{width:100%;border:1px solid #cfdeec;border-radius:9px;padding:9px;background:#fff;color:#33495c;outline:none}.field input:focus,.field select:focus{border-color:#8dbce8;box-shadow:0 0 0 3px #edf6ff}.filter-actions{display:flex;gap:8px;flex-wrap:wrap}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:11px}.kpi{border:1px solid #e0e8f0;border-radius:13px;padding:14px;background:linear-gradient(180deg,#fff,#f9fbfd)}.kpi .label{font-size:11px;color:#718499}.kpi .value{font-size:21px;font-weight:750;color:#3478d4;margin-top:5px}.kpi .sub{font-size:10px;color:#8b99a8;margin-top:4px}
-.chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:13px}.chart-box{border:1px solid #e0e8f0;border-radius:13px;padding:13px;min-height:285px;background:#fcfdff}.chart-title{font-weight:700;color:#516b82;font-size:12px;margin-bottom:8px}.chart-box canvas{width:100%;height:235px;display:block}.chart-wide{grid-column:1/-1}
+.chart-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:12px 0 16px;padding:12px;border:1px solid #dce5ef;border-radius:12px;background:#f8fbff}.chart-controls .chart-toggle{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid #d3dfeb;border-radius:9px;background:#fff;cursor:pointer;font-size:12px;font-weight:650}.chart-controls .chart-toggle input{accent-color:#3478d4;cursor:pointer}.chart-controls .chart-toggle:has(input:not(:checked)){opacity:.55}.chart-controls .chart-toggle .state-swatch{height:10px;width:10px;border-radius:3px;display:inline-block}.chart-controls .chart-reset{border:1px solid #bcd7f7;background:#eaf3ff;border-radius:9px;padding:8px 12px;color:#2868bd;cursor:pointer;font-size:12px}.chart-controls .chart-help{font-size:11px;color:#708197;width:100%}.chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:13px}.chart-box{border:1px solid #e0e8f0;border-radius:13px;padding:13px;min-height:285px;background:#fcfdff}.chart-title{font-weight:700;color:#516b82;font-size:12px;margin-bottom:8px}.chart-box canvas{width:100%;height:235px;display:block}.chart-wide{grid-column:1/-1}
 .report-box{background:#f8fbff;border:1px solid #dce9f5;border-radius:12px;padding:15px;line-height:1.58;font-size:13px}.report-box h4{margin:0 0 8px;color:#3478d4}.report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .table-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.table-info{font-size:12px;color:#718194}.table-wrap{overflow:auto;max-height:520px;border:1px solid #dde7f0;border-radius:12px}.data-table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}.data-table th{position:sticky;top:0;background:#edf5ff;color:#3f6588;padding:9px;text-align:left;z-index:1;border-bottom:1px solid #cfe0ef}.data-table td{border-bottom:1px solid #edf1f5;padding:8px 9px}.data-table tr:nth-child(even){background:#fbfcfe}.pill{display:inline-block;border-radius:12px;padding:3px 8px;font-size:10px;font-weight:700}.pill.on{background:#e8f7f1;color:#278b69}.pill.off{background:#fcecee;color:#bd4f5a}.pill.xxx{background:#fbf3e3;color:#a36f18}
 .empty{padding:25px;text-align:center;color:#8492a0}.mini-note{font-size:10px;color:#8190a0;margin-top:8px}.mobile-toggle{display:none}
@@ -97,7 +96,14 @@ button,input,select{font:inherit}.icon{width:17px;height:17px;stroke:currentColo
     <div id="resultados" style="display:none">
       <div class="panel"><h3>Resumen ejecutivo</h3><div class="kpi-grid" id="kpi-grid"></div><div class="mini-note">La utilización se calcula como tiempo encendido dividido entre el tiempo total registrado en los eventos filtrados.</div></div>
 
-      <div class="panel"><h3>Gráficas</h3><p class="help">Las horas se reparten correctamente entre los días que atraviesa cada evento. Un evento de varias horas o varios días ya no se acumula completo en la fecha de inicio.</p><div class="chart-grid">
+      <div class="panel"><h3>Gráficas interactivas</h3><p class="help">Selecciona qué estados deseas comparar. Los tres gráficos cambian inmediatamente, sin alterar el resumen, la tabla ni los TXT originales.</p>
+        <div class="chart-controls" role="group" aria-label="Estados visibles en las gráficas">
+          <label class="chart-toggle"><input type="checkbox" id="graf-on" checked><span class="state-swatch" style="background:#2aa876"></span> Encendido</label>
+          <label class="chart-toggle"><input type="checkbox" id="graf-off" checked><span class="state-swatch" style="background:#dc5b67"></span> Detenido</label>
+          <label class="chart-toggle"><input type="checkbox" id="graf-xxx" checked><span class="state-swatch" style="background:#d69a2d"></span> Interrupción eléctrica</label>
+          <button class="chart-reset" id="graf-todos" type="button">Mostrar todos</button>
+          <div class="chart-help" id="graf-aviso" aria-live="polite">Se muestran los tres estados.</div>
+        </div><div class="chart-grid">
         <div class="chart-box"><div class="chart-title">Horas por día <span style="font-weight:400;color:#8190a0">(máximo 24 h por máquina)</span></div><canvas id="chart-horas"></canvas><div class="mini-note" id="nota-chart-horas">Cada barra apilada representa el tiempo real de Encendido, Detenido y Interrupción eléctrica dentro de ese día calendario.</div></div>
         <div class="chart-box"><div class="chart-title">Distribución del tiempo</div><canvas id="chart-distribucion"></canvas></div>
         <div class="chart-box chart-wide"><div class="chart-title">Cantidad de eventos por día</div><canvas id="chart-eventos"></canvas></div>
@@ -253,7 +259,23 @@ document.getElementById("btn-aplicar").onclick=aplicarFiltros;document.getElemen
 const dz=document.getElementById("dropzone"),inp=document.getElementById("input-archivo");dz.onclick=()=>inp.click();inp.onchange=e=>cargarArchivos(e.target.files);["dragenter","dragover"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add("dropzone-hover")}));["dragleave","drop"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove("dropzone-hover")}));dz.addEventListener("drop",e=>cargarArchivos(e.dataTransfer.files));
 
 function resumen(arr){let on=0,off=0,xxx=0,nOn=0,nOff=0,nX=0;for(const r of arr){if(r.estado==="ON"){on+=r.duracionSeg;nOn++}else if(r.estado==="OFF"){off+=r.duracionSeg;nOff++}else{xxx+=r.duracionSeg;nX++}}const total=on+off+xxx,util=total?on/total*100:0;const maxOff=arr.filter(r=>r.estado==="OFF").sort((a,b)=>b.duracionSeg-a.duracionSeg)[0];const maxOn=arr.filter(r=>r.estado==="ON").sort((a,b)=>b.duracionSeg-a.duracionSeg)[0];return {on,off,xxx,total,nOn,nOff,nX,eventos:arr.length,util,promOn:nOn?on/nOn:0,promOff:nOff?off/nOff:0,maxOff,maxOn}}
-function actualizarTodo(){const r=resumen(filtrados);pintarKpis(r);pintarTabla(filtrados);pintarInforme(r);requestAnimationFrame(()=>{drawDailyHours(filtrados);drawDonut(r);drawEventCounts(filtrados)})}
+const ESTADOS_GRAFICOS={ON:{nombre:"Encendido",color:"#2aa876"},OFF:{nombre:"Detenido",color:"#dc5b67"},XXX:{nombre:"Interrupción eléctrica",color:"#d69a2d"}};
+let estadosVisibles=new Set(["ON","OFF","XXX"]);
+function datosGraficos(){return filtrados.filter(r=>estadosVisibles.has(r.estado))}
+function actualizarGraficas(){
+ const activos=datosGraficos();
+ const aviso=document.getElementById("graf-aviso");
+ aviso.textContent=estadosVisibles.size?"Mostrando: "+[...estadosVisibles].map(k=>ESTADOS_GRAFICOS[k].nombre).join(" + ")+". El resumen y la tabla permanecen sin cambios.":"Selecciona al menos un estado para mostrar datos.";
+ requestAnimationFrame(()=>{drawDailyHours(activos);drawDonut(resumen(activos));drawEventCounts(activos)});
+}
+[["graf-on","ON"],["graf-off","OFF"],["graf-xxx","XXX"]].forEach(([id,key])=>{
+ document.getElementById(id).addEventListener("change",e=>{
+  if(e.target.checked)estadosVisibles.add(key);else estadosVisibles.delete(key);
+  actualizarGraficas();
+ });
+});
+document.getElementById("graf-todos").onclick=()=>{estadosVisibles=new Set(["ON","OFF","XXX"]);["graf-on","graf-off","graf-xxx"].forEach(id=>document.getElementById(id).checked=true);actualizarGraficas()};
+function actualizarTodo(){const r=resumen(filtrados);pintarKpis(r);pintarTabla(filtrados);pintarInforme(r);actualizarGraficas()}
 function pintarKpis(r){const maquinas=new Set(filtrados.map(x=>x.maquina)).size;const rango=filtrados.length?`${fechaES(filtrados[0].inicio)} – ${fechaES(filtrados[filtrados.length-1].fin)}`:"Sin datos";document.getElementById("kpi-grid").innerHTML=`
  <div class="kpi"><div class="label">Tiempo encendido</div><div class="value">${fmtHoras(r.on)}</div><div class="sub">${r.nOn.toLocaleString("es-BO")} eventos ON</div></div>
  <div class="kpi"><div class="label">Tiempo detenido</div><div class="value">${fmtHoras(r.off)}</div><div class="sub">${r.nOff.toLocaleString("es-BO")} eventos OFF</div></div>
@@ -276,9 +298,9 @@ function daily(arr){
   const map=new Map();
   for(const r of arr){
     const startKey=isoDate(r.inicio);
-    if(!map.has(startKey))map.set(startKey,{date:startKey,ON:0,OFF:0,XXX:0,n:0,maquinas:new Set()});
-    map.get(startKey).n++;
-    for(const p of splitEventoPorDia(r)){if(!map.has(p.date))map.set(p.date,{date:p.date,ON:0,OFF:0,XXX:0,n:0,maquinas:new Set()});const x=map.get(p.date);x[r.estado]+=p.seg;x.maquinas.add(r.maquina)}
+    if(!map.has(startKey))map.set(startKey,{date:startKey,ON:0,OFF:0,XXX:0,n:0,cuenta:{ON:0,OFF:0,XXX:0},maquinas:new Set()});
+    map.get(startKey).n++;map.get(startKey).cuenta[r.estado]++;
+    for(const p of splitEventoPorDia(r)){if(!map.has(p.date))map.set(p.date,{date:p.date,ON:0,OFF:0,XXX:0,n:0,cuenta:{ON:0,OFF:0,XXX:0},maquinas:new Set()});const x=map.get(p.date);x[r.estado]+=p.seg;x.maquinas.add(r.maquina)}
   }
   return [...map.values()].sort((a,b)=>a.date.localeCompare(b.date))
 }
@@ -295,11 +317,24 @@ function drawDailyHours(arr){
   const bw=Math.max(4,Math.min(24,cw/data.length*.62));
   data.forEach((d,i)=>{const x=pad.l+(i+.5)*cw/data.length-bw/2;let y=pad.t+ch;[["ON","#2aa876"],["OFF","#dc5b67"],["XXX","#d69a2d"]].forEach(([k,col])=>{const bh=(d[k]/3600)/axisMax*ch;y-=bh;ctx.fillStyle=col;ctx.fillRect(x,y,bw,Math.max(0,bh))});const total=(d.ON+d.OFF+d.XXX)/3600;if(data.length<=16&&total>0){ctx.fillStyle="#52677c";ctx.font="9px Arial";ctx.textAlign="center";ctx.fillText(total.toFixed(total>=10?1:2)+" h",x+bw/2,Math.max(10,y-4));ctx.textAlign="left"}if(data.length<=18||i%Math.ceil(data.length/12)===0){ctx.save();ctx.translate(x+bw/2,h-8);ctx.rotate(-.55);ctx.fillStyle="#667788";ctx.fillText(d.date.slice(5),0,0);ctx.restore()}});legend(ctx,Math.max(pad.l,w-255),8)
 }
-function legend(ctx,x,y){[["Encendido","#2aa876"],["Detenido","#dc5b67"],["Interrupción eléctrica","#d69a2d"]].forEach(([t,c],i)=>{ctx.fillStyle=c;ctx.fillRect(x+i*82,y,9,9);ctx.fillStyle="#536575";ctx.font="10px Arial";ctx.fillText(t,x+13+i*82,y+8)})}
-function drawDonut(r){const {ctx,w,h}=setupCanvas("chart-distribucion"),vals=[r.on,r.off,r.xxx],total=vals.reduce((a,b)=>a+b,0);if(!total)return emptyChart(ctx,w,h);const cols=["#2aa876","#dc5b67","#d69a2d"],cx=w/2,cy=h/2-8,R=Math.min(w,h)*.31,r0=R*.58;let a=-Math.PI/2;vals.forEach((v,i)=>{const da=v/total*Math.PI*2;ctx.beginPath();ctx.arc(cx,cy,R,a,a+da);ctx.arc(cx,cy,r0,a+da,a,true);ctx.closePath();ctx.fillStyle=cols[i];ctx.fill();a+=da});ctx.fillStyle="#1f4e79";ctx.font="bold 22px Arial";ctx.textAlign="center";ctx.fillText(r.util.toFixed(1)+"%",cx,cy+2);ctx.font="10px Arial";ctx.fillStyle="#657581";ctx.fillText("utilización",cx,cy+18);ctx.textAlign="left";legend(ctx,Math.max(10,w/2-120),h-18)}
-function drawEventCounts(arr){const {ctx,w,h}=setupCanvas("chart-eventos"),data=daily(arr);if(!data.length)return emptyChart(ctx,w,h);const pad={l:40,r:12,t:12,b:45},max=Math.max(...data.map(d=>d.n),1),cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;ctx.font="10px Arial";ctx.strokeStyle="#e4e9ed";ctx.fillStyle="#647582";for(let i=0;i<=4;i++){const y=pad.t+ch*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(Math.round(max*(1-i/4)),6,y+3)}ctx.strokeStyle="#1f4e79";ctx.lineWidth=2;ctx.beginPath();data.forEach((d,i)=>{const x=pad.l+(i+.5)*cw/data.length,y=pad.t+ch-d.n/max*ch;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke();ctx.fillStyle="#1f4e79";data.forEach((d,i)=>{const x=pad.l+(i+.5)*cw/data.length,y=pad.t+ch-d.n/max*ch;ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);ctx.fill();if(data.length<=18||i%Math.ceil(data.length/12)===0){ctx.save();ctx.translate(x,h-8);ctx.rotate(-.55);ctx.fillStyle="#667788";ctx.fillText(d.date.slice(5),0,0);ctx.restore()}})}
+function legend(ctx,x,y){const xs=[...estadosVisibles];ctx.save();ctx.font="10px Arial";const maxW=ctx.canvas.width/(window.devicePixelRatio||1);let xx=Math.max(6,Math.min(x,maxW-270));xs.forEach(k=>{const t=ESTADOS_GRAFICOS[k];ctx.fillStyle=t.color;ctx.fillRect(xx,y,9,9);ctx.fillStyle="#536575";const label=k==="XXX"?"Interrupción":t.nombre;ctx.fillText(label,xx+13,y+8);xx+=ctx.measureText(label).width+27});ctx.restore()}
+function drawDonut(r){
+ const {ctx,w,h}=setupCanvas("chart-distribucion"),items=[...estadosVisibles].map(k=>({k,seg:k==="ON"?r.on:k==="OFF"?r.off:r.xxx}));
+ const total=items.reduce((a,b)=>a+b.seg,0);if(!total)return emptyChart(ctx,w,h);
+ const cx=w/2,cy=h/2-8,R=Math.min(w,h)*.31,r0=R*.58;let a=-Math.PI/2;
+ items.forEach(({k,seg})=>{if(!seg)return;const da=seg/total*Math.PI*2;ctx.beginPath();ctx.arc(cx,cy,R,a,a+da);ctx.arc(cx,cy,r0,a+da,a,true);ctx.closePath();ctx.fillStyle=ESTADOS_GRAFICOS[k].color;ctx.fill();a+=da});
+ ctx.fillStyle="#1f4e79";ctx.font="bold 20px Arial";ctx.textAlign="center";ctx.fillText((total/3600).toLocaleString("es-BO",{maximumFractionDigits:1})+" h",cx,cy+2);ctx.font="10px Arial";ctx.fillStyle="#657581";ctx.fillText("tiempo visible",cx,cy+18);ctx.textAlign="left";legend(ctx,Math.max(10,w/2-115),h-18)
+}
+function drawEventCounts(arr){
+ const {ctx,w,h}=setupCanvas("chart-eventos"),data=daily(arr);if(!data.length)return emptyChart(ctx,w,h);
+ const pad={l:40,r:14,t:27,b:45},max=Math.max(1,...data.map(d=>Math.max(...[...estadosVisibles].map(k=>d.cuenta[k])))),cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+ ctx.font="10px Arial";ctx.strokeStyle="#e4e9ed";ctx.fillStyle="#647582";
+ for(let i=0;i<=4;i++){const y=pad.t+ch*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(Math.round(max*(1-i/4)),6,y+3)}
+ [...estadosVisibles].forEach(k=>{ctx.strokeStyle=ESTADOS_GRAFICOS[k].color;ctx.fillStyle=ESTADOS_GRAFICOS[k].color;ctx.lineWidth=2;ctx.beginPath();data.forEach((d,i)=>{const x=pad.l+(i+.5)*cw/data.length,y=pad.t+ch-d.cuenta[k]/max*ch;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke();data.forEach((d,i)=>{const x=pad.l+(i+.5)*cw/data.length,y=pad.t+ch-d.cuenta[k]/max*ch;ctx.beginPath();ctx.arc(x,y,2.7,0,Math.PI*2);ctx.fill()})});
+ ctx.fillStyle="#667788";data.forEach((d,i)=>{const x=pad.l+(i+.5)*cw/data.length;if(data.length<=18||i%Math.ceil(data.length/12)===0){ctx.save();ctx.translate(x,h-8);ctx.rotate(-.55);ctx.fillText(d.date.slice(5),0,0);ctx.restore()}});legend(ctx,Math.max(40,w-270),8)
+}
 function emptyChart(ctx,w,h){ctx.fillStyle="#7a8791";ctx.font="12px Arial";ctx.textAlign="center";ctx.fillText("Sin datos para los filtros seleccionados",w/2,h/2);ctx.textAlign="left"}
-window.addEventListener("resize",()=>{if(filtrados.length||registros.length){drawDailyHours(filtrados);drawDonut(resumen(filtrados));drawEventCounts(filtrados)}});
+window.addEventListener("resize",()=>{if(filtrados.length||registros.length)actualizarGraficas()});
 
 function csvData(){const rows=[["N","Torno / Horimetro","Estado","Fecha inicio","Hora inicio","Fecha fin","Hora fin","Duracion","Archivo origen"]];filtrados.forEach((r,i)=>rows.push([i+1,nombreEquipo(r.maquina),ETIQUETAS[r.estado].texto,r.fechaInicio,r.horaInicio,r.fechaFin,r.horaFin,r.duracionTexto,r.archivo]));return rows}
 function downloadBlob(content,type,name){const b=new Blob([content],{type}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500)}
