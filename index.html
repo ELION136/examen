@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -59,7 +60,7 @@ button,input,select{font:inherit}.icon{width:17px;height:17px;stroke:currentColo
   <div class="section-label">tornos</div>
   <div id="lista-tornos"></div>
   <button class="side-action" id="btn-verificar-todo"><svg class="icon"><use href="#i-refresh"/></svg> Verificar conexiones</button>
-  <div class="side-note">El indicador junto a cada IP muestra el resultado de la última verificación.</div>
+  <div class="side-note">La verificación es orientativa. Abre cada enlace para comprobarlo; los horímetros sin puerto confirmado quedan pendientes.</div>
   <div class="separator"></div>
   <div class="section-label">Herramientas</div>
   <button id="btn-ir-analisis" class="side-btn"><svg class="icon"><use href="#i-chart"/></svg> Análisis de TXT</button>
@@ -70,7 +71,7 @@ button,input,select{font:inherit}.icon{width:17px;height:17px;stroke:currentColo
     <div style="display:flex;align-items:center;gap:9px"><button class="btn mobile-toggle" id="menu-btn" aria-label="Abrir menú"><svg class="icon"><use href="#i-menu"/></svg></button><h2 id="titulo-actual">Selecciona un torno</h2></div>
     <div class="top-actions"><div id="viewer-status" class="viewer-status"><span class="mini-dot"></span><span id="viewer-status-text">Listo</span></div><button id="btn-recargar-frame" class="btn accent" type="button" title="Volver a cargar la interfaz de la IP seleccionada"><svg class="icon"><use href="#i-refresh"/></svg>Actualizar visor</button><a id="abrir-nueva" class="btn primary hide-mobile" href="#" target="_blank" rel="noopener"><svg class="icon"><use href="#i-external"/></svg>Abrir en pestaña nueva</a></div>
   </header>
-  <section id="viewer-wrap"><div class="notice">Visor de red local. Usa “Actualizar visor” para recargar la IP seleccionada sin cambiar de torno.</div><div class="viewer-shell"><iframe id="viewer" src="about:blank" loading="eager"></iframe></div></section>
+  <section id="viewer-wrap"><div class="notice">Acceso mediante 192.168.40.169 y puertos 8081–8085. Si el visor aparece en blanco, utiliza «Abrir en pestaña nueva». Identifica HOR2–HOR5 con Sistemas antes de asignarlos a tornos.</div><div class="viewer-shell"><iframe id="viewer" src="about:blank" loading="eager"></iframe></div></section>
 
   <section id="analysis-view">
     <div class="panel upload-panel">
@@ -109,48 +110,124 @@ button,input,select{font:inherit}.icon{width:17px;height:17px;stroke:currentColo
   </section>
 </main>
 <script>
+// Los puertos HOR1..HOR5 están confirmados por la captura de Sistemas.
+// La asociación HOR2..HOR5 con un torno específico AÚN NO está confirmada.
+// HOR6..HOR8 son marcadores de posición; no inventamos direcciones ni reglas.
 const TORNOS_POR_DEFECTO=[
- {nombre:"TORNO-01",equipo:"HAL846",ip:"192.168.40.81"},
- {nombre:"TORNO-02",equipo:"HAL847",ip:"192.168.40.82"},
- {nombre:"TORNO-03",equipo:"HAL848",ip:"192.168.40.83"},
- {nombre:"TORNO-04",equipo:"HAL854",ip:"192.168.40.84"},
- {nombre:"TORNO-05",equipo:"HAL849",ip:"192.168.40.85"},
- {nombre:"TORNO-06",equipo:"HAL853",ip:"192.168.40.86"},
- {nombre:"TORNO-07",equipo:"HAL852",ip:"192.168.40.87"},
- {nombre:"TORNO-08",equipo:"HAL850",ip:"192.168.40.88"}
+ {nombre:"HOR1",equipo:"HAL849",ip:"192.168.0.106",url:"http://192.168.40.169:8081"},
+ {nombre:"HOR2",equipo:"SIN IDENTIFICAR",ip:"192.168.0.221",url:"http://192.168.40.169:8082"},
+ {nombre:"HOR3",equipo:"SIN IDENTIFICAR",ip:"192.168.0.101",url:"http://192.168.40.169:8083"},
+ {nombre:"HOR4",equipo:"SIN IDENTIFICAR",ip:"192.168.0.159",url:"http://192.168.40.169:8084"},
+ {nombre:"HOR5",equipo:"SIN IDENTIFICAR",ip:"192.168.0.145",url:"http://192.168.40.169:8085"},
+ {nombre:"HOR6",equipo:"PENDIENTE",ip:"",url:""},
+ {nombre:"HOR7",equipo:"PENDIENTE",ip:"",url:""},
+ {nombre:"HOR8",equipo:"PENDIENTE",ip:"",url:""}
 ];
-const CLAVE_LOCAL="horimetros_ips_v4";
+// Correspondencias de tornos identificadas en tu archivo original; se mantienen para análisis TXT.
+const REFERENCIA_TORNOS=[
+ {nombre:"TORNO-01",equipo:"HAL846"},
+ {nombre:"TORNO-02",equipo:"HAL847"},
+ {nombre:"TORNO-03",equipo:"HAL848"},
+ {nombre:"TORNO-04",equipo:"HAL854"},
+ {nombre:"TORNO-05",equipo:"HAL849"},
+ {nombre:"TORNO-06",equipo:"HAL853"},
+ {nombre:"TORNO-07",equipo:"HAL852"},
+ {nombre:"TORNO-08",equipo:"HAL850"}
+];
+// Clave nueva: evita que las IP anteriores, guardadas en el navegador, sobrescriban las nuevas URL.
+const CLAVE_LOCAL="horimetros_enlaces_redirigidos_v1";
 function icon(id,cls="icon"){return `<svg class="${cls}"><use href="#${id}"/></svg>`}
-function cargarTornos(){
-  try{
-    let g=JSON.parse(localStorage.getItem(CLAVE_LOCAL)||"null");
-    if(Array.isArray(g)) return TORNOS_POR_DEFECTO.map((t,i)=>({nombre:t.nombre,equipo:t.equipo,ip:g[i]?.ip||t.ip}));
-  }catch(e){}
-  return TORNOS_POR_DEFECTO.map(t=>({...t}))
+function validarUrl(valor){
+  if(!valor)return "";
+  let u;try{u=new URL(valor)}catch(e){return null}
+  if(!["http:","https:"].includes(u.protocol)||u.username||u.password)return null;
+  return u.href;
 }
-const TORNOS=cargarTornos();function guardarTornos(){try{localStorage.setItem(CLAVE_LOCAL,JSON.stringify(TORNOS))}catch(e){}}
+function cargarTornos(){
+  let g=null;
+  try{g=JSON.parse(localStorage.getItem(CLAVE_LOCAL)||"null")}catch(e){}
+  return TORNOS_POR_DEFECTO.map((t,i)=>{
+    const x=Array.isArray(g)?g[i]:null;
+    if(!x)return {...t};
+    return {...t,nombre:typeof x.nombre==="string"?x.nombre:t.nombre,
+       equipo:typeof x.equipo==="string"?x.equipo:t.equipo,
+       ip:typeof x.ip==="string"?x.ip:t.ip,
+       url:typeof x.url==="string"&&validarUrl(x.url)!==null?x.url:t.url};
+  });
+}
+const TORNOS=cargarTornos();
+function guardarTornos(){try{localStorage.setItem(CLAVE_LOCAL,JSON.stringify(TORNOS))}catch(e){}}
 const lista=document.getElementById("lista-tornos"),viewer=document.getElementById("viewer"),viewerWrap=document.getElementById("viewer-wrap"),analysisView=document.getElementById("analysis-view"),titulo=document.getElementById("titulo-actual"),abrirNueva=document.getElementById("abrir-nueva"),btnRecargar=document.getElementById("btn-recargar-frame"),viewerStatus=document.getElementById("viewer-status"),viewerStatusText=document.getElementById("viewer-status-text");
 let tornoSeleccionado=0;
 function setViewerStatus(texto,estado=""){viewerStatus.className="viewer-status"+(estado?" "+estado:"");viewerStatusText.textContent=texto}
-function precalentarIp(url){try{fetch(url,{mode:"no-cors",cache:"default",keepalive:true}).catch(()=>{})}catch(e){}}
 function cargarVisor(i,forzar=false){
-  tornoSeleccionado=i;const t=TORNOS[i];if(!t)return;const base=`http://${t.ip}`;
-  analysisView.style.display="none";viewerWrap.style.display="block";document.getElementById("btn-ir-analisis").classList.remove("activo");document.querySelectorAll(".fila-torno").forEach((e,n)=>e.classList.toggle("activo",n===i));
-  abrirNueva.href=base;abrirNueva.style.visibility="visible";btnRecargar.style.display="inline-flex";titulo.textContent=`${t.nombre} · ${t.equipo} - ${t.ip}`;setViewerStatus(forzar?"Actualizando visor...":"Cargando visor...","loading");
-  precalentarIp(base);
-  if(forzar){viewer.src="about:blank";requestAnimationFrame(()=>{viewer.src=base})}else{viewer.src=base}
+  tornoSeleccionado=i;const t=TORNOS[i];if(!t)return;
+  const base=validarUrl(t.url);
+  analysisView.style.display="none";viewerWrap.style.display="block";
+  document.getElementById("btn-ir-analisis").classList.remove("activo");
+  document.querySelectorAll(".fila-torno").forEach((e,n)=>e.classList.toggle("activo",n===i));
+  abrirNueva.href=base||"#";abrirNueva.style.visibility=base?"visible":"hidden";
+  btnRecargar.style.display=base?"inline-flex":"none";
+  titulo.textContent=`${t.nombre} · ${t.equipo}${base?" - "+base:" - Sin enlace configurado"}`;
   document.getElementById("sidebar").classList.remove("open");
+  if(!base){viewer.src="about:blank";setViewerStatus("Falta URL; usa el lápiz para configurarla");return;}
+  if(location.protocol==="https:"&&base.startsWith("http:")){
+    viewer.src="about:blank";
+    setViewerStatus("HTTPS bloquea el visor HTTP; usa «Abrir en pestaña nueva»","bad");
+    return;
+  }
+  setViewerStatus(forzar?"Actualizando visor…":"Cargando interfaz…","loading");
+  if(forzar){viewer.src="about:blank";requestAnimationFrame(()=>{viewer.src=base})}
+  else{viewer.src=base}
 }
 function refrescarVisor(){cargarVisor(tornoSeleccionado,true)}
-function renderTornos(){lista.innerHTML="";TORNOS.forEach((t,i)=>{const row=document.createElement("div");row.className="fila-torno";row.innerHTML=`<button class="torno-btn"><div class="torno-name">${escapeHtml(t.nombre)} · ${escapeHtml(t.equipo)}</div><div class="torno-ip-linea"><span id="punto-${i}" class="status-dot"></span><span>${escapeHtml(t.ip)}</span></div></button><button class="edit-ip" title="Editar IP">${icon("i-edit","icon sm")}</button><div class="ip-editor"><input value="${escapeHtml(t.ip)}" aria-label="IP"><button>OK</button></div>`;row.querySelector(".torno-btn").onclick=()=>seleccionarTorno(i);row.querySelector(".edit-ip").onclick=(e)=>{e.stopPropagation();row.querySelector(".ip-editor").classList.toggle("show")};row.querySelector(".ip-editor button").onclick=()=>{const v=row.querySelector("input").value.trim();if(v){TORNOS[i].ip=v;guardarTornos();renderTornos();seleccionarTorno(i)}};lista.appendChild(row)})}
+function renderTornos(){
+  lista.innerHTML="";
+  TORNOS.forEach((t,i)=>{
+    const row=document.createElement("div");row.className="fila-torno";
+    row.innerHTML=`<button class="torno-btn"><div class="torno-name">${escapeHtml(t.nombre)} · ${escapeHtml(t.equipo)}</div><div class="torno-ip-linea"><span id="punto-${i}" class="status-dot"></span><span>${escapeHtml(t.url||"Sin enlace configurado")}</span></div></button><button class="edit-ip" title="Editar enlace y equipo">${icon("i-edit","icon sm")}</button><div class="ip-editor"><input value="${escapeHtml(t.url)}" placeholder="http://192.168.40.169:8086" aria-label="URL de acceso"><button>OK</button></div>`;
+    row.querySelector(".torno-btn").onclick=()=>seleccionarTorno(i);
+    row.querySelector(".edit-ip").onclick=e=>{e.stopPropagation();row.querySelector(".ip-editor").classList.toggle("show")};
+    row.querySelector(".ip-editor button").onclick=()=>{
+      const v=row.querySelector(".ip-editor input").value.trim(),url=validarUrl(v);
+      if(url===null){alert("Introduce una URL HTTP/HTTPS válida, por ejemplo http://192.168.40.169:8086");return;}
+      TORNOS[i].url=url;guardarTornos();renderTornos();seleccionarTorno(i);
+    };
+    lista.appendChild(row);
+  });
+}
 function seleccionarTorno(i){cargarVisor(i,false)}
 function mostrarAnalisis(){viewerWrap.style.display="none";analysisView.style.display="block";document.querySelectorAll(".fila-torno").forEach(e=>e.classList.remove("activo"));document.getElementById("btn-ir-analisis").classList.add("activo");titulo.textContent="Análisis de registros de horímetros";abrirNueva.style.visibility="hidden";btnRecargar.style.display="none";setViewerStatus("Análisis TXT");document.getElementById("sidebar").classList.remove("open")}
-async function verificarUnaIp(ip){const c=new AbortController(),timer=setTimeout(()=>c.abort(),2500);try{await fetch(`http://${ip}`,{mode:"no-cors",cache:"no-store",signal:c.signal});clearTimeout(timer);return true}catch(e){clearTimeout(timer);return false}}
-async function verificarTodos(){const b=document.getElementById("btn-verificar-todo");b.disabled=true;b.innerHTML=`${icon("i-refresh")} Verificando...`;TORNOS.forEach((_,i)=>document.getElementById(`punto-${i}`).className="status-dot check");await Promise.all(TORNOS.map(async(t,i)=>{const ok=await verificarUnaIp(t.ip);document.getElementById(`punto-${i}`).className="status-dot "+(ok?"ok":"bad")}));b.disabled=false;b.innerHTML=`${icon("i-refresh")} Verificar conexiones`}
-document.getElementById("btn-verificar-todo").onclick=verificarTodos;document.getElementById("btn-ir-analisis").onclick=mostrarAnalisis;document.getElementById("menu-btn").onclick=()=>document.getElementById("sidebar").classList.toggle("open");btnRecargar.onclick=refrescarVisor;viewer.addEventListener("load",()=>{if(viewer.src&&viewer.src!=="about:blank")setViewerStatus("Visor cargado","ready")});renderTornos();seleccionarTorno(0);
+// fetch con mode:no-cors no permite inspeccionar la respuesta HTTP ni validar su contenido.
+// Y si la página se sirve por HTTPS, el navegador puede bloquear HTTP: no marcar como fuera de línea.
+async function verificarUnaUrl(url){
+  const base=validarUrl(url);
+  if(!base)return "pendiente";
+  if(location.protocol==="https:"&&base.startsWith("http:"))return "no-verificable";
+  const c=new AbortController(),timer=setTimeout(()=>c.abort(),4500);
+  try{await fetch(base,{mode:"no-cors",cache:"no-store",signal:c.signal});return "respuesta"}
+  catch(e){return "no-verificable"}finally{clearTimeout(timer)}
+}
+async function verificarTodos(){
+  const b=document.getElementById("btn-verificar-todo");b.disabled=true;
+  b.innerHTML=`${icon("i-refresh")} Verificando...`;
+  TORNOS.forEach((_,i)=>document.getElementById(`punto-${i}`).className="status-dot check");
+  await Promise.all(TORNOS.map(async(t,i)=>{
+    const result=await verificarUnaUrl(t.url),p=document.getElementById(`punto-${i}`);
+    p.className="status-dot "+(result==="respuesta"?"ok":"check");
+    p.title=result==="respuesta"?"Se estableció comunicación; no se verifica el contenido HTTP":result==="pendiente"?"Falta configurar URL":"No se pudo verificar desde este navegador. Abre el enlace directamente.";
+  }));
+  b.disabled=false;b.innerHTML=`${icon("i-refresh")} Verificar conexiones`;
+}
+document.getElementById("btn-verificar-todo").onclick=verificarTodos;
+document.getElementById("btn-ir-analisis").onclick=mostrarAnalisis;
+document.getElementById("menu-btn").onclick=()=>document.getElementById("sidebar").classList.toggle("open");
+btnRecargar.onclick=refrescarVisor;
+viewer.addEventListener("load",()=>{if(viewer.src&&viewer.src!=="about:blank")setViewerStatus("Visor terminó de cargar; verifica que muestre el horímetro (no implica conexión confirmada)")});
+renderTornos();seleccionarTorno(0);
 
 const ETIQUETAS={ON:{texto:"Encendido",clase:"on"},OFF:{texto:"Detenido",clase:"off"},XXX:{texto:"Interrupción eléctrica",clase:"xxx"}};
-const MAPA_EQUIPOS=Object.fromEntries(TORNOS_POR_DEFECTO.map(t=>[t.equipo.toUpperCase(),t]));
+const MAPA_EQUIPOS=Object.fromEntries(REFERENCIA_TORNOS.map(t=>[t.equipo.toUpperCase(),t]));
 function datosEquipo(codigo){return MAPA_EQUIPOS[String(codigo||"").trim().toUpperCase()]||null}
 function nombreEquipo(codigo){const t=datosEquipo(codigo);return t?`${t.nombre} · ${t.equipo}`:String(codigo||"Sin identificar")}
 let registros=[],filtrados=[],archivosCargados=[],duplicadosEliminados=0;
